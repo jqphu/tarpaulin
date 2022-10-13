@@ -9,44 +9,49 @@ import getActionInputs from './args';
 import resolveConfig from './config';
 
 async function run() {
-    /* Make sure cargo is available before we do anything */
-    const cargo = await rustCore.Cargo.get();
+  /* Make sure cargo is available before we do anything */
+  const cargo = await rustCore.Cargo.get();
 
-    const inputs = getActionInputs();
-    const config = await resolveConfig(inputs);
+  const inputs = getActionInputs();
+  const config = await resolveConfig(inputs);
 
-    const outputDir = `${os.tmpdir()}/tarpaulin`;
-    await io.mkdirP(outputDir);
+  const outputDir = `${os.tmpdir()}/tarpaulin`;
+  await io.mkdirP(outputDir);
 
-    core.info(`[tarpaulin] downloading cargo-tarpaulin from ${config.downloadUrl}`);
-    const tarpaulinTarballPath = await toolCache.downloadTool(config.downloadUrl);
-    const tarpaulinBinPath = await toolCache.extractTar(tarpaulinTarballPath);
+  core.info(`[tarpaulin] downloading cargo-tarpaulin from ${config.downloadUrl}`);
+  const tarpaulinTarballPath = await toolCache.downloadTool(config.downloadUrl);
+  const tarpaulinBinPath = await toolCache.extractTar(tarpaulinTarballPath);
 
-    core.addPath(tarpaulinBinPath);
+  core.addPath(tarpaulinBinPath);
 
-    let args = ["tarpaulin", "--out", config.outType];
-    const additionalArgs = config.additionalOptions;
+  let args = ["tarpaulin", "--out", config.outType];
+  const additionalArgs = config.additionalOptions;
 
-    if (!additionalArgs.includes('--run-types') && config.type !== null) {
-        args.push('--run-types', config.type);
-    }
+  if (!additionalArgs.includes('--run-types') && config.type !== null) {
+    args.push('--run-types', config.type);
+  }
 
-    if (!additionalArgs.includes('--timeout') && config.timeout !== null) {
-        args.push('--timeout', config.timeout);
-    }
+  if (!additionalArgs.includes('--timeout') && config.timeout !== null) {
+    args.push('--timeout', config.timeout);
+  }
 
-    args = args.concat(additionalArgs);
+  args = args.concat(additionalArgs);
 
-    core.info(`[tarpaulin] running tests with coverage tracking`);
-    await cargo.call(args);
+
+  if (inputs.workingDirectory) {
+    process.chdir(path.join(process.cwd(), inputs.workingDirectory))
+  }
+
+  core.info(`[tarpaulin] running tests with coverage tracking`);
+  await cargo.call(args);
 }
 
 async function main() {
-    try {
-        await run();
-    } catch (error) {
-        core.setFailed(error.message);
-    }
+  try {
+    await run();
+  } catch (error) {
+    core.setFailed(error.message);
+  }
 }
 
 main();

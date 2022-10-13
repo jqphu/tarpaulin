@@ -31,3 +31,7 @@ inputs:
     description: 'Output format of coverage report [possible values: Json, Toml, Stdout, Xml, Html, Lcov]'
     required: false
     default: 'Xml'
+
+  working-directory:
+    description: Where to start the cargo process
+    required: false
